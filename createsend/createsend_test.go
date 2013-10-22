@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"reflect"
 	"testing"
 )
 
@@ -15,13 +16,13 @@ var (
 	mux *http.ServeMux
 
 	// client is the createsend client being tested.
-	client *Client
+	client *APIClient
 
 	// server is a test HTTP server used to provide mock API responses.
 	server *httptest.Server
 )
 
-// setup sets up a test HTTP server along with a createsend.Client that is
+// setup sets up a test HTTP server along with a createsend.APIClient that is
 // configured to talk to that test server. Tests should register handlers on mux
 // which provide mock responses for the API method being tested.
 func setup() {
@@ -30,7 +31,7 @@ func setup() {
 	server = httptest.NewServer(mux)
 
 	// createsend client configured to use test server
-	client = NewClient(nil)
+	client = NewAPIClient(nil)
 	url, _ := url.Parse(server.URL)
 	client.BaseURL = url
 }
@@ -61,19 +62,19 @@ func testURLParseError(t *testing.T, err error) {
 	}
 }
 
-func TestNewClient(t *testing.T) {
-	c := NewClient(nil)
+func TestNewAPIClient(t *testing.T) {
+	c := NewAPIClient(nil)
 
 	if c.BaseURL.String() != defaultBaseURL {
-		t.Errorf("NewClient BaseURL = %v, want %v", c.BaseURL.String(), defaultBaseURL)
+		t.Errorf("NewAPIClient BaseURL = %v, want %v", c.BaseURL.String(), defaultBaseURL)
 	}
 	if c.UserAgent != userAgent {
-		t.Errorf("NewClient UserAgent = %v, want %v", c.UserAgent, userAgent)
+		t.Errorf("NewAPIClient UserAgent = %v, want %v", c.UserAgent, userAgent)
 	}
 }
 
 func TestNewRequest(t *testing.T) {
-	c := NewClient(nil)
+	c := NewAPIClient(nil)
 
 	inURL, outURL := "foo", defaultBaseURL+"foo"
 	inBody, outBody := &NewSubscriber{EmailAddress: "a@a.com"}, `{"EmailAddress":"a@a.com"}`+"\n"
@@ -98,7 +99,7 @@ func TestNewRequest(t *testing.T) {
 }
 
 func TestNewRequest_invalidJSON(t *testing.T) {
-	c := NewClient(nil)
+	c := NewAPIClient(nil)
 
 	type T struct {
 		A map[int]interface{}
@@ -114,7 +115,7 @@ func TestNewRequest_invalidJSON(t *testing.T) {
 }
 
 func TestNewRequest_badURL(t *testing.T) {
-	c := NewClient(nil)
+	c := NewAPIClient(nil)
 	_, err := c.NewRequest("GET", ":", nil)
 	testURLParseError(t, err)
 }
@@ -135,7 +136,13 @@ func TestDo(t *testing.T) {
 	})
 
 	req, _ := client.NewRequest("GET", "/", nil)
-	client.Do(req)
+	body := new(foo)
+	client.Do(req, body)
+
+	want := &foo{"a"}
+	if !reflect.DeepEqual(body, want) {
+		t.Errorf("Response body = %v, want %v", body, want)
+	}
 }
 
 func TestDo_httpError(t *testing.T) {
@@ -147,9 +154,31 @@ func TestDo_httpError(t *testing.T) {
 	})
 
 	req, _ := client.NewRequest("GET", "/", nil)
-	err := client.Do(req)
+	err := client.Do(req, nil)
 
 	if err == nil {
 		t.Error("Expected HTTP 400 error.")
+	}
+}
+
+// Test handling of an error caused by the internal http client's Do() function.
+// A redirect loop is pretty unlikely to occur within the Campaign Monitor API,
+// but does allow us to exercise the right code path.
+func TestDo_redirectLoop(t *testing.T) {
+	setup()
+	defer teardown()
+
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/", http.StatusFound)
+	})
+
+	req, _ := client.NewRequest("GET", "/", nil)
+	err := client.Do(req, nil)
+
+	if err == nil {
+		t.Error("Expected error to be returned.")
+	}
+	if err, ok := err.(*url.Error); !ok {
+		t.Errorf("Expected a URL error; got %#v.", err)
 	}
 }

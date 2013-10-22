@@ -29,7 +29,7 @@ type CustomField struct {
 //
 // See http://www.campaignmonitor.com/api/subscribers/#adding_a_subscriber for
 // more information.
-func (c *Client) AddSubscriber(listID string, sub NewSubscriber) error {
+func (c *APIClient) AddSubscriber(listID string, sub NewSubscriber) error {
 	u := fmt.Sprintf("subscribers/%s.json", listID)
 
 	req, err := c.NewRequest("POST", u, sub)
@@ -37,5 +37,5 @@ func (c *Client) AddSubscriber(listID string, sub NewSubscriber) error {
 		return err
 	}
 
-	return c.Do(req)
+	return c.Do(req, nil)
 }
