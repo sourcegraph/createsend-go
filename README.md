@@ -4,6 +4,11 @@ createsend-go
 createsend-go is a [Go](http://golang.org) library for accessing the [Campaign
 Monitor API](http://www.campaignmonitor.com/api/).
 
+This is an unofficial library that is not affiliated with [Campaign
+Monitor](http://www.campaignmonitor.com). Official libraries are available at
+[github.com/campaignmonitor](https://github.com/campaignmonitor).
+
+
 Example usage
 -------------
 
