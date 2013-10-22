@@ -85,4 +85,5 @@ Acknowledgements
 ----------------
 
 The library's architecture and testing code are adapted from
-[go-github](https://github.com/google/go-github).
+[go-github](https://github.com/google/go-github), created by [Will
+Norris](https://github.com/willnorris).
