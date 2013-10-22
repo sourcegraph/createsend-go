@@ -8,6 +8,14 @@ This is an unofficial library that is not affiliated with [Campaign
 Monitor](http://www.campaignmonitor.com). Official libraries are available at
 [github.com/campaignmonitor](https://github.com/campaignmonitor).
 
+**Documentation:** <https://sourcegraph.com/github.com/sourcegraph/createsend-go/tree>
+
+[![status](https://sourcegraph.com/api/repos/github.com/sourcegraph/createsend-go/badges/status.png)](https://sourcegraph.com/github.com/sourcegraph/createsend-go)
+[![xrefs](https://sourcegraph.com/api/repos/github.com/sourcegraph/createsend-go/badges/xrefs.png)](https://sourcegraph.com/github.com/sourcegraph/createsend-go)
+[![funcs](https://sourcegraph.com/api/repos/github.com/sourcegraph/createsend-go/badges/funcs.png)](https://sourcegraph.com/github.com/sourcegraph/createsend-go)
+[![top func](https://sourcegraph.com/api/repos/github.com/sourcegraph/createsend-go/badges/top-func.png)](https://sourcegraph.com/github.com/sourcegraph/createsend-go)
+[![Views in the last 24 hours](https://sourcegraph.com/api/repos/github.com/sourcegraph/createsend-go/counters/views-24h.png)](https://sourcegraph.com/github.com/sourcegraph/createsend-go)
+
 
 Example usage
 -------------
