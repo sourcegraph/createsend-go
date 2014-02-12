@@ -54,7 +54,7 @@ func TestListsForEmail(t *testing.T) {
 	mux.HandleFunc("/clients/12ab/listsforemail.json", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "GET")
 		testQuerystring(t, r, "email=alice@example.com")
-		fmt.Fprint(w, `[{"ListID": "34cd", "Name": "mylist"}]`)
+		fmt.Fprint(w, `[{"ListID": "34cd", "ListName": "mylist", "SubscriberState": "Active"}]`)
 	})
 
 	lists, err := client.ListsForEmail("12ab", "alice@example.com")
@@ -62,7 +62,7 @@ func TestListsForEmail(t *testing.T) {
 		t.Errorf("ListsForEmail returned error: %v", err)
 	}
 
-	want := []*List{{ListID: "34cd", Name: "mylist"}}
+	want := []*ListForEmail{{ListID: "34cd", ListName: "mylist", SubscriberState: "Active"}}
 	if !reflect.DeepEqual(lists, want) {
 		t.Errorf("ListsForEmail returned %+v, want %+v", lists, want)
 	}

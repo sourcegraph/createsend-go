@@ -20,6 +20,7 @@ func main() {
 		fmt.Fprintln(os.Stderr)
 		fmt.Fprintln(os.Stderr, "\tlist-clients")
 		fmt.Fprintln(os.Stderr, "\tlist-lists       CLIENT")
+		fmt.Fprintln(os.Stderr, "\tlists-for-email CLIENT EMAIL")
 		fmt.Fprintln(os.Stderr, "\tlist-subscribers LIST (active|unconfirmed|unsubscribed|bounced|deleted)")
 		fmt.Fprintln(os.Stderr, "\tget-subscriber   LIST EMAIL")
 		fmt.Fprintln(os.Stderr, "\tadd-subscriber   LIST EMAIL")
@@ -59,6 +60,8 @@ func main() {
 		listClients(remaining)
 	case "list-lists":
 		listLists(remaining)
+	case "lists-for-email":
+		listsForEmail(remaining)
 	case "list-subscribers":
 		listSubscribers(remaining)
 	case "get-subscriber":
@@ -99,6 +102,26 @@ func listLists(args []string) {
 	}
 	for _, c := range lists {
 		fmt.Printf("%-24s %s\n", c.Name, c.ListID)
+	}
+}
+
+func listsForEmail(args []string) {
+	if len(args) != 2 {
+		log.Println("lists-for-email takes 2 arguments.")
+		flag.Usage()
+	}
+
+	clientID, email := args[0], args[1]
+	lists, err := apiclient.ListsForEmail(clientID, email)
+	if err != nil {
+		log.Fatalf("Error listing lists for email address %q: %s\n", email, err)
+	}
+	if len(lists) == 0 {
+		fmt.Printf("No lists found for email address %q.\n", email)
+		return
+	}
+	for _, c := range lists {
+		fmt.Printf("%-44s %s  %s\n", c.ListName, c.ListID, c.DateSubscriberAddedStr)
 	}
 }
 

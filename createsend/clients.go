@@ -49,12 +49,24 @@ func (c *APIClient) ListLists(clientID string) ([]*List, error) {
 	return lists, err
 }
 
+// ListForEmail represents a subscriber list *and* a specific email address's
+// subscription to that list. The schema differs from that of List.
+//
+// See http://www.campaignmonitor.com/api/clients/#lists_for_email for more
+// information.
+type ListForEmail struct {
+	ListID                 string
+	ListName               string
+	SubscriberState        string
+	DateSubscriberAddedStr string `json:"DateSubscriberAdded"`
+}
+
 // ListsForEmail returns all of the client's subscriber lists to which the email
 // address is subscribed.
 //
 // See http://www.campaignmonitor.com/api/clients/#lists_for_email for more
 // information.
-func (c *APIClient) ListsForEmail(clientID string, email string) ([]*List, error) {
+func (c *APIClient) ListsForEmail(clientID string, email string) ([]*ListForEmail, error) {
 	u := fmt.Sprintf("clients/%s/listsforemail.json?email=%s", clientID, email)
 
 	req, err := c.NewRequest("GET", u, nil)
@@ -62,7 +74,7 @@ func (c *APIClient) ListsForEmail(clientID string, email string) ([]*List, error
 		return nil, err
 	}
 
-	var lists []*List
+	var lists []*ListForEmail
 	err = c.Do(req, &lists)
 	if err != nil {
 		return nil, err
