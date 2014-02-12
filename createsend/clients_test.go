@@ -26,3 +26,24 @@ func TestListClients(t *testing.T) {
 		t.Errorf("ListClients returned %+v, want %+v", clients, want)
 	}
 }
+
+func TestListsForEmail(t *testing.T) {
+	setup()
+	defer teardown()
+
+	mux.HandleFunc("/clients/12ab/listsforemail.json", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "GET")
+		testQuerystring(t, r, "email=alice@example.com")
+		fmt.Fprint(w, `[{"ListID": "34cd", "Name": "mylist"}]`)
+	})
+
+	lists, err := client.ListsForEmail("12ab", "alice@example.com")
+	if err != nil {
+		t.Errorf("ListsForEmail returned error: %v", err)
+	}
+
+	want := []*List{{ListID: "34cd", Name: "mylist"}}
+	if !reflect.DeepEqual(lists, want) {
+		t.Errorf("ListsForEmail returned %+v, want %+v", lists, want)
+	}
+}
