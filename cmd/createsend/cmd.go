@@ -26,6 +26,7 @@ func main() {
 		fmt.Fprintln(os.Stderr, "\tlist-subscribers LIST (active|unconfirmed|unsubscribed|bounced|deleted)")
 		fmt.Fprintln(os.Stderr, "\tget-subscriber   LIST EMAIL")
 		fmt.Fprintln(os.Stderr, "\tadd-subscriber   LIST EMAIL")
+		fmt.Fprintln(os.Stderr, "\tunsubscribe      LIST EMAIL")
 		fmt.Fprintln(os.Stderr)
 		fmt.Fprintln(os.Stderr)
 		fmt.Fprintln(os.Stderr, "Common arguments:")
@@ -74,6 +75,8 @@ func main() {
 		getSubscriber(remaining)
 	case "add-subscriber":
 		addSubscriber(remaining)
+	case "unsubscribe":
+		unsubscribe(remaining)
 	}
 }
 
@@ -177,4 +180,18 @@ func addSubscriber(args []string) {
 		log.Fatalf("Error adding subcriber %q to list %q: %s\n", email, listID, err)
 	}
 	fmt.Printf("Added subscriber %q to list %q.\n", email, listID)
+}
+
+func unsubscribe(args []string) {
+	if len(args) != 2 {
+		log.Println("unsubscribe takes 2 arguments.")
+		flag.Usage()
+	}
+
+	listID, email := args[0], args[1]
+	err := apiclient.Unsubscribe(listID, email)
+	if err != nil {
+		log.Fatalf("Error unsubscribing %q from list %q: %s\n", email, listID, err)
+	}
+	fmt.Printf("Unsubscribed %q from list %q.\n", email, listID)
 }

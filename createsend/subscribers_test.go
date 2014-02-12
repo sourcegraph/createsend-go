@@ -70,3 +70,17 @@ func TestGetSubscriber_NotInList(t *testing.T) {
 		t.Errorf("GetSubscriber returned non-nil subscriber %+v", sub)
 	}
 }
+
+func TestUnsubscribe(t *testing.T) {
+	setup()
+	defer teardown()
+
+	mux.HandleFunc("/subscribers/12CD/unsubscribe.json", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "POST")
+	})
+
+	err := client.Unsubscribe("12CD", "alice@example.com")
+	if err != nil {
+		t.Errorf("Unsubscribe returned error: %v", err)
+	}
+}

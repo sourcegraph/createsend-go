@@ -89,3 +89,19 @@ func (c *APIClient) GetSubscriber(listID string, email string) (*Subscriber, err
 
 	return &sub, nil
 }
+
+// Unsubscribe changes the status of a subscriber from Active to Unsubscribed.
+//
+// See
+// http://www.campaignmonitor.com/api/subscribers/#unsubscribing_a_subscriber
+// for more information.
+func (c *APIClient) Unsubscribe(listID string, email string) error {
+	u := fmt.Sprintf("subscribers/%s/unsubscribe.json", listID)
+
+	req, err := c.NewRequest("POST", u, struct{ EmailAddress string }{email})
+	if err != nil {
+		return err
+	}
+
+	return c.Do(req, nil)
+}
