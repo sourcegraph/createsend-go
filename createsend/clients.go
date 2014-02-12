@@ -32,6 +32,23 @@ func (c *APIClient) ListClients() ([]Client, error) {
 	return *clients, err
 }
 
+// ListLists returns all of the subscriber lists that belong to a client.
+//
+// See http://www.campaignmonitor.com/api/clients/#subscriber_lists for more
+// information.
+func (c *APIClient) ListLists(clientID string) ([]*List, error) {
+	u := fmt.Sprintf("clients/%s/lists.json", clientID)
+
+	req, err := c.NewRequest("GET", u, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var lists []*List
+	err = c.Do(req, &lists)
+	return lists, err
+}
+
 // ListsForEmail returns all of the client's subscriber lists to which the email
 // address is subscribed.
 //
