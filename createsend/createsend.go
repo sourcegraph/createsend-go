@@ -70,6 +70,15 @@ func (c *APIClient) NewRequest(method, urlStr string, body interface{}) (*http.R
 	return req, nil
 }
 
+type CreatesendError struct {
+	Code    int
+	Message string
+}
+
+func (e *CreatesendError) Error() string {
+	return fmt.Sprintf("%s (createsend error %d)", e.Message, e.Code)
+}
+
 // Do sends an API request and returns the API response. The API response is
 // decoded and stored in the value pointed to by v, or returned as an error if
 // an API error has occurred.
@@ -81,7 +90,14 @@ func (c *APIClient) Do(req *http.Request, v interface{}) error {
 
 	defer resp.Body.Close()
 
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+	if resp.StatusCode == http.StatusBadRequest {
+		var e CreatesendError
+		err = json.NewDecoder(resp.Body).Decode(&e)
+		if err != nil {
+			return err
+		}
+		return &e
+	} else if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return fmt.Errorf("http response status code %d", resp.StatusCode)
 	}
 

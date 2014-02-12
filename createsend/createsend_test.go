@@ -47,6 +47,12 @@ func testMethod(t *testing.T, r *http.Request, want string) {
 	}
 }
 
+func testQuerystring(t *testing.T, r *http.Request, want string) {
+	if want != r.URL.RawQuery {
+		t.Errorf("Querystring = %v, want %v", r.URL.RawQuery, want)
+	}
+}
+
 func testHeader(t *testing.T, r *http.Request, header string, want string) {
 	if value := r.Header.Get(header); want != value {
 		t.Errorf("Header %s = %s, want: %s", header, value, want)

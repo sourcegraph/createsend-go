@@ -2,6 +2,7 @@ package createsend
 
 import (
 	"fmt"
+	"time"
 )
 
 // NewSubscriber represents a new subscriber to be added with AddSubscriber.
@@ -38,4 +39,53 @@ func (c *APIClient) AddSubscriber(listID string, sub NewSubscriber) error {
 	}
 
 	return c.Do(req, nil)
+}
+
+// Subscriber represents a subscriber.
+//
+// See
+// http://www.campaignmonitor.com/api/subscribers/#getting_a_subscribers_details
+// for more information.
+type Subscriber struct {
+	EmailAddress   string
+	Name           string        `json:",omitempty"`
+	Date           time.Time     `json:"-"`
+	State          string        `json:",omitempty"`
+	CustomFields   []CustomField `json:",omitempty"`
+	ReadsEmailWith string        `json:",omitempty"`
+
+	// DateStr holds the createsend API's date format, which is "2010-10-25
+	// 10:28:00". This is not the format that encoding/json expects, so we must
+	// parse it separately. The parsed date is stored in the Date field, and the
+	// RFC3339 date string is overwritten into this field.
+	DateStr string `json:"date,omitempty"`
+}
+
+// GetSubscriber gets a subscriber's details.
+//
+// See
+// http://www.campaignmonitor.com/api/subscribers/#getting_a_subscribers_details
+// for more information.
+func (c *APIClient) GetSubscriber(listID string, email string) (*Subscriber, error) {
+	u := fmt.Sprintf("subscribers/%s.json?email=%s", listID, email)
+
+	req, err := c.NewRequest("GET", u, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var sub Subscriber
+	err = c.Do(req, &sub)
+	if err != nil {
+		return nil, err
+	}
+
+	// Parse createsend API date format. (See Subscriber.DateStr field comment.)
+	sub.Date, err = time.Parse("2006-01-02 15:04:05", sub.DateStr)
+	if err != nil {
+		return nil, err
+	}
+	sub.DateStr = sub.Date.Format(time.RFC3339)
+
+	return &sub, nil
 }
