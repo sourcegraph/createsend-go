@@ -10,6 +10,8 @@ import (
 	"github.com/sourcegraph/createsend-go/createsend"
 )
 
+var verbose = flag.Bool("v", false, "verbose")
+
 var apiclient *createsend.APIClient
 
 func main() {
@@ -52,6 +54,10 @@ func main() {
 		Transport: &createsend.APIKeyAuthTransport{APIKey: apiKey},
 	}
 	apiclient = createsend.NewAPIClient(authClient)
+
+	if *verbose {
+		apiclient.Log = log.New(os.Stderr, "createsend: ", 0)
+	}
 
 	subcmd := flag.Arg(0)
 	remaining := flag.Args()[1:]

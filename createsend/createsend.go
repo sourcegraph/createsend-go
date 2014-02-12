@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 )
@@ -24,6 +26,9 @@ type APIClient struct {
 
 	// UserAgent used when communicating with the Campaign Monitor API.
 	UserAgent string
+
+	// Log is used to log debugging messages, if set.
+	Log *log.Logger
 }
 
 // NewAPIClient returns a new Campaign Monitor API client. If a nil httpClient
@@ -98,6 +103,13 @@ func (c *APIClient) Do(req *http.Request, v interface{}) error {
 		}
 		return &e
 	} else if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		if c.Log != nil {
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				log.Printf("ReadAll failed: %s")
+			}
+			c.Log.Printf("http response %d body:\n%s", resp.StatusCode, body)
+		}
 		return fmt.Errorf("http response status code %d", resp.StatusCode)
 	}
 
