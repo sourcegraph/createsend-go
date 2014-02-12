@@ -5,6 +5,32 @@ import (
 	"time"
 )
 
+// List represents a subscriber list.
+//
+// See http://www.campaignmonitor.com/api/clients/#subscriber_lists for more
+// information.
+type List struct {
+	ListID string
+	Name   string
+}
+
+// ListLists returns all of the subscriber lists that belong to a client.
+//
+// See http://www.campaignmonitor.com/api/clients/#subscriber_lists for more
+// information.
+func (c *APIClient) ListLists(clientID string) ([]*List, error) {
+	u := fmt.Sprintf("clients/%s/lists.json", clientID)
+
+	req, err := c.NewRequest("GET", u, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var lists []*List
+	err = c.Do(req, &lists)
+	return lists, err
+}
+
 type SubscriberGroup string
 
 const (
@@ -45,7 +71,9 @@ func (c *APIClient) ListSubscribers(listID string, group SubscriberGroup, opt *L
 		return nil, err
 	}
 
-	var subs []*Subscriber
-	err = c.Do(req, &subs)
-	return subs, err
+	var results struct {
+		Results []*Subscriber
+	}
+	err = c.Do(req, &results)
+	return results.Results, err
 }
