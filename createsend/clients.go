@@ -61,6 +61,14 @@ type ListForEmail struct {
 	DateSubscriberAddedStr string `json:"DateSubscriberAdded"`
 }
 
+func (e *ListForEmail) IsSubscribed() bool {
+	return e.SubscriberState == "Active"
+}
+
+func (e *ListForEmail) IsUnsubscribed() bool {
+	return e.SubscriberState == "Unsubscribed"
+}
+
 // ListsForEmail returns all of the client's subscriber lists to which the email
 // address is subscribed.
 //
