@@ -13,7 +13,7 @@ import (
 const (
 	libraryVersion = "0.0.1"
 	userAgent      = "createsend-go/" + libraryVersion
-	defaultBaseURL = "https://api.createsend.com/api/v3/"
+	defaultBaseURL = "https://api.createsend.com/api/v3.1/"
 )
 
 // A APIClient manages communication with the Campaign Monitor API.
@@ -76,8 +76,9 @@ func (c *APIClient) NewRequest(method, urlStr string, body interface{}) (*http.R
 }
 
 type CreatesendError struct {
-	Code    int
-	Message string
+	Code       int
+	Message    string
+	ResultData interface{}
 }
 
 func (e *CreatesendError) Error() string {
