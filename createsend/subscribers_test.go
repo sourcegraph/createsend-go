@@ -84,3 +84,88 @@ func TestUnsubscribe(t *testing.T) {
 		t.Errorf("Unsubscribe returned error: %v", err)
 	}
 }
+
+func TestImportSubscribers(t *testing.T) {
+	setup()
+	defer teardown()
+
+	mux.HandleFunc("/subscribers/12CD/import.json", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusCreated)
+		fmt.Fprint(w, `{"FailureDetails" : [], "TotalUniqueEmailsSubmitted" : 3, "TotalExistingSubscribed": 0, "TotalNewSubscribers" : 2, "DuplicateEmailsInSubmission" :[]}`)
+	})
+
+	s1 := ImportSubscriber{EmailAddress: "alice@example.com", Name: "Alice"}
+	s2 := ImportSubscriber{EmailAddress: "john@example.com", Name: "John"}
+
+	im := ImportSubscribers{Subscribers: []ImportSubscriber{s1, s2}}
+
+	_, err := client.ImportSubscribers("12CD", im)
+	if err != nil {
+		t.Errorf("ImportSubcribers returned error: %v", err)
+	}
+}
+
+func TestImportSubscribersFailed(t *testing.T) {
+	setup()
+	defer teardown()
+
+	mux.HandleFunc("/subscribers/12CD/import.json", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, `{
+    "ResultData": {
+        "TotalUniqueEmailsSubmitted": 3,
+        "TotalExistingSubscribers": 2,
+        "TotalNewSubscribers": 0,
+        "DuplicateEmailsInSubmission": [],
+        "FailureDetails": [
+            {
+                "EmailAddress": "example+1@example",
+                "Code": 1,
+                "Message": "Invalid Email Address"
+            }
+        ]
+    },
+    "Code": 210,
+    "Message": "Subscriber Import had some failures"
+}`)
+	})
+
+	s1 := ImportSubscriber{EmailAddress: "alice@example.com", Name: "Alice"}
+	s2 := ImportSubscriber{EmailAddress: "john@example.com", Name: "John"}
+
+	im := ImportSubscribers{Subscribers: []ImportSubscriber{s1, s2}}
+
+	_, err := client.ImportSubscribers("12CD", im)
+	if err == nil {
+		t.Error("ImportSubcribers returned no error")
+	}
+}
+
+func TestDeleteSubscriber(t *testing.T) {
+	setup()
+	defer teardown()
+	mux.HandleFunc("/subscribers/12CD.json", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
+	err := client.DeleteSubscriber("12CD", "alice@example.com")
+
+	if err != nil {
+		t.Error("DeleteSubscriber returned an error")
+	}
+}
+
+func TestDeleteSubscriberFail(t *testing.T) {
+	setup()
+	defer teardown()
+	mux.HandleFunc("/subscribers/12CD.json", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, `{"Code" : 1}`)
+	})
+
+	err := client.DeleteSubscriber("12CD", "alice@example.com")
+
+	if err == nil {
+		t.Error("DeleteSubscriber did not return an error")
+	}
+}

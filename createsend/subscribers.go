@@ -105,3 +105,54 @@ func (c *APIClient) Unsubscribe(listID string, email string) error {
 
 	return c.Do(req, nil)
 }
+
+// Delete removes the Subscriber from the specified list
+//
+// See
+// https://www.campaignmonitor.com/api/subscribers/#deleting_a_subscriber
+// for more information.
+func (c *APIClient) DeleteSubscriber(listID string, email string) error {
+	u := fmt.Sprintf("subscribers/%s.json?email=%s", listID, email)
+
+	req, err := c.NewRequest("DELETE", u, struct{ EmailAddress string }{email})
+	if err != nil {
+		return err
+	}
+
+	return c.Do(req, nil)
+}
+
+// NewSubscriber represents a new subscriber to be added with AddSubscriber.
+//
+// See http://www.campaignmonitor.com/api/subscribers/#adding_a_subscriber for
+// more information.
+type ImportSubscriber struct {
+	EmailAddress string
+	Name         string        `json:",omitempty"`
+	CustomFields []CustomField `json:",omitempty"`
+}
+
+type ImportSubscribers struct {
+	Subscribers                            []ImportSubscriber
+	Resubscribe                            bool `json:",omitempty"`
+	QueueSubscriptionBasedAutoResponders   bool `json:",omitempty"`
+	RestartSubscriptionBasedAutoresponders bool `json:",omitempty"`
+}
+
+// Importing many subscribes
+//
+// See
+// https://www.campaignmonitor.com/api/subscribers/#importing_many_subscribers
+// for more information.
+func (c *APIClient) ImportSubscribers(listID string, importSubscribers ImportSubscribers) (interface{}, error) {
+	u := fmt.Sprintf("subscribers/%s/import.json", listID)
+
+	req, err := c.NewRequest("POST", u, importSubscribers)
+	if err != nil {
+		return nil, err
+	}
+
+	var v interface{}
+	err = c.Do(req, &v)
+	return v, err
+}
