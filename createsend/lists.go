@@ -1,6 +1,7 @@
 package createsend
 
 import (
+	"errors"
 	"fmt"
 	"time"
 )
@@ -59,4 +60,70 @@ func (c *APIClient) ListSubscribers(listID string, group SubscriberGroup, opt *L
 	}
 	err = c.Do(req, &results)
 	return results.Results, err
+}
+
+// ListDelete deletes a given list
+//
+// See https://www.campaignmonitor.com/api/lists/#deleting_a_list for more
+// information.
+func (c *APIClient) ListDelete(listID string) error {
+	u := fmt.Sprintf("lists/%s.json", listID)
+
+	req, err := c.NewRequest("DELETE", u, nil)
+	if err != nil {
+		return err
+	}
+
+	err = c.Do(req, nil)
+	return err
+}
+
+type UnsubcribeSetting string
+
+const (
+	AllClientLists UnsubcribeSetting = "AllClientLists"
+	OnlyThisList                     = "OnlyThisList"
+)
+
+// ListCreateOptions represents the parameters needed
+// to create a new list.
+//
+// See https://www.campaignmonitor.com/api/lists/#creating_a_list for
+// more information.
+type ListCreateOptions struct {
+	Title                   string            `json:"Title"`
+	UnsubscribePage         string            `json:"UnsubscribePage"`
+	UnsubscribeSetting      UnsubcribeSetting `json:"UnsubscribeSetting"`
+	ConfirmedOptin          bool              `json:"ConfirmedOptin"`
+	ConfirmationSuccessPage string            `json:"ConfirmationSuccessPage"`
+}
+
+// ListCreate creates a new list
+//
+// See https://www.campaignmonitor.com/api/lists/#creating_a_list for more
+// information.
+func (c *APIClient) ListCreate(clientID string, opt *ListCreateOptions) (string, error) {
+	if opt.UnsubscribeSetting == "" {
+		return "", errors.New("Unsubscribesetting not set")
+	}
+
+	u := fmt.Sprintf("lists/%s.json", clientID)
+
+	req, err := c.NewRequest("POST", u, opt)
+	if err != nil {
+		return "", err
+	}
+
+	var v interface{}
+	err = c.Do(req, &v)
+	if err != nil {
+		return "", err
+	}
+
+	s, ok := v.(string)
+	if !ok {
+		return "", errors.New("Returned value is not a string")
+	}
+
+	return s, nil
 }
