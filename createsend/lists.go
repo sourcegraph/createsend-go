@@ -245,3 +245,117 @@ func (c *APIClient) ListSegments(listID string) ([]ListSegment, error) {
 
 	return result, nil
 }
+
+type WebhookCreate struct {
+	Events        []string `json:"Events"`
+	Url           string   `json:"Url"`
+	PayloadFormat string   `json:"PayloadFormat"`
+}
+
+type Webhook struct {
+	WebhookCreate
+	WebhookID string `json:"WebhookID"`
+	Status    string `json:"Status"`
+}
+
+// ListWebhooks lists the webhooks for a given list.
+//
+// See https://www.campaignmonitor.com/api/lists/#list_webhooks for
+// more information.
+func (c *APIClient) ListWebhooks(listID string) ([]Webhook, error) {
+	u := fmt.Sprintf("lists/%s/webhooks.json", listID)
+
+	req, err := c.NewRequest("GET", u, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []Webhook
+	err = c.Do(req, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+// ListCreateWebhook creates a new webhook for a given list.
+//
+// See https://www.campaignmonitor.com/api/lists/#list_webhooks for
+// more information.
+func (c *APIClient) ListCreateWebhook(listID string, webhook *WebhookCreate) (string, error) {
+	u := fmt.Sprintf("lists/%s/webhooks.json", listID)
+
+	req, err := c.NewRequest("POST", u, webhook)
+	if err != nil {
+		return "", err
+	}
+
+	var result string
+	err = c.Do(req, &result)
+	if err != nil {
+		return "", err
+	}
+
+	return result, nil
+}
+
+// ListTestWebhook tests a given webhook for a given list.
+//
+// See https://www.campaignmonitor.com/api/lists/#testing_a_webhook for
+// more information.
+func (c *APIClient) ListTestWebhook(listID string, webhookID string) error {
+	u := fmt.Sprintf("lists/%s/webhooks/%s/test.json", listID, webhookID)
+
+	req, err := c.NewRequest("GET", u, nil)
+	if err != nil {
+		return err
+	}
+
+	return c.Do(req, nil)
+}
+
+// ListDeleteWebhook deletes a given webhook for a given list.
+//
+// See https://www.campaignmonitor.com/api/lists/#deleting_a_webhook for
+// more information.
+func (c *APIClient) ListDeleteWebhook(listID string, webhookID string) error {
+	u := fmt.Sprintf("lists/%s/webhooks/%s.json", listID, webhookID)
+
+	req, err := c.NewRequest("DELETE", u, nil)
+	if err != nil {
+		return err
+	}
+
+	return c.Do(req, nil)
+}
+
+// ListActivateWebhook actives a given webhook for a given list.
+//
+// See https://www.campaignmonitor.com/api/lists/#activating_a_webhook for
+// more information.
+func (c *APIClient) ListActivateWebhook(listID string, webhookID string) error {
+	u := fmt.Sprintf("lists/%s/webhooks/%s/activate.json", listID, webhookID)
+
+	req, err := c.NewRequest("PUT", u, nil)
+	if err != nil {
+		return err
+	}
+
+	return c.Do(req, nil)
+}
+
+// ListDeactivateWebhook deactivates a given webhook for a given list.
+//
+// See https://www.campaignmonitor.com/api/lists/#deactivating_a_webhook for
+// more information.
+func (c *APIClient) ListDeactivateWebhook(listID string, webhookID string) error {
+	u := fmt.Sprintf("lists/%s/webhooks/%s/deactivate.json", listID, webhookID)
+
+	req, err := c.NewRequest("PUT", u, nil)
+	if err != nil {
+		return err
+	}
+
+	return c.Do(req, nil)
+}
