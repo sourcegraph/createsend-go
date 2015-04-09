@@ -200,3 +200,160 @@ func TestListSegments(t *testing.T) {
 		t.Errorf("Expected first listid to equal \"12CD\" but got \"%s\"", segments[0].ListID)
 	}
 }
+
+func TestListWebhooks(t *testing.T) {
+	setup()
+	defer teardown()
+	mux.HandleFunc("/lists/12CD/webhooks.json", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "GET")
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprint(w, `[
+				{
+					"WebhookID": "ee1b3864e5ca61618q98su98qsu9q",
+					"Events": [
+						"Subscribe"
+					],
+					"Url": "http://example.com/subscribe",
+					"Status": "Active",
+					"PayloadFormat": "Json"
+				},
+				{
+					"WebhookID": "89d8quw98du9qw8ud9q8wud8u98u8",
+					"Events": [
+						"Deactivate"
+					],
+					"Url": "http://example.com/deactivate",
+					"Status": "Active",
+					"PayloadFormat": "Json"
+				}
+			]`)
+	})
+
+	webhooks, err := client.ListWebhooks("12CD")
+	if err != nil {
+		t.Errorf("ListWebhooks returned an error: %v", err)
+	}
+
+	if len(webhooks) != 2 {
+		t.Errorf("Expected 2 webhooks but got %d", len(webhooks))
+	}
+
+	if webhooks[0].Url != "http://example.com/subscribe" {
+		t.Errorf("Wrong url: %s", webhooks[0].Url)
+	}
+}
+
+func TestListCreateWebhook(t *testing.T) {
+	setup()
+	defer teardown()
+	mux.HandleFunc("/lists/12CD/webhooks.json", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "POST")
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprint(w, `"QWE123"`)
+	})
+
+	id, err := client.ListCreateWebhook("12CD", &WebhookCreate{Events: []string{"Subscribe"}, Url: "http://example.com/subscribe", PayloadFormat: "json"})
+	if err != nil {
+		t.Errorf("ListCreateWebhook returned an error: %v", err)
+	}
+
+	if id != "QWE123" {
+		t.Errorf("Wrong ID returned: %s", id)
+	}
+}
+
+func TestListCreateWebhookFail(t *testing.T) {
+	setup()
+	defer teardown()
+	mux.HandleFunc("/lists/12CD/webhooks.json", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "POST")
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, `{"Code" : 602}`)
+	})
+
+	_, err := client.ListCreateWebhook("12CD", &WebhookCreate{Events: []string{"Subscribe"}, Url: "http://example.com/subscribe"})
+	if err == nil {
+		t.Errorf("ListCreateWebhook did not return an error")
+	}
+}
+
+func TestListTestWebhook(t *testing.T) {
+	setup()
+	defer teardown()
+	mux.HandleFunc("/lists/12CD/webhooks/QWE123/test.json", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "GET")
+		w.WriteHeader(http.StatusOK)
+	})
+
+	err := client.ListTestWebhook("12CD", "QWE123")
+	if err != nil {
+		t.Errorf("ListTestWebhook returned an error: %v", err)
+	}
+}
+
+func TestListTestWebhookFail(t *testing.T) {
+	setup()
+	defer teardown()
+	mux.HandleFunc("/lists/12CD/webhooks/QWE123/test.json", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "GET")
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, `{
+				"ResultData": {
+					"FailureStatus": "ProtocolError",
+					"FailureResponseMessage": "NotFound",
+					"FailureResponseCode": 404,
+					"FailureResponse": ""
+				},
+				"Code": 610,
+				"Message": "The webhook request has failed"
+			}`)
+	})
+
+	err := client.ListTestWebhook("12CD", "QWE123")
+	if err == nil {
+		t.Errorf("ListTestWebhook did not return an error")
+	}
+}
+
+func TestListDeleteWebhook(t *testing.T) {
+	setup()
+	defer teardown()
+	mux.HandleFunc("/lists/12CD/webhooks/QWE123.json", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "DELETE")
+		w.WriteHeader(http.StatusOK)
+	})
+
+	err := client.ListDeleteWebhook("12CD", "QWE123")
+	if err != nil {
+		t.Errorf("ListDeleteWebhook returned an error: %v", err)
+	}
+}
+
+func TestListActivateWebhook(t *testing.T) {
+	setup()
+	defer teardown()
+	mux.HandleFunc("/lists/12CD/webhooks/QWE123/activate.json", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "PUT")
+		w.WriteHeader(http.StatusOK)
+	})
+
+	err := client.ListActivateWebhook("12CD", "QWE123")
+	if err != nil {
+		t.Errorf("ListActivateWebhook returned an error: %v", err)
+	}
+}
+
+func TestListDeactivateWebhook(t *testing.T) {
+	setup()
+	defer teardown()
+
+	mux.HandleFunc("/lists/12CD/webhooks/QWE123/deactivate.json", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "PUT")
+		w.WriteHeader(http.StatusOK)
+	})
+
+	err := client.ListDeactivateWebhook("12CD", "QWE123")
+	if err != nil {
+		t.Errorf("ListDeactivateWebhook returned an error: %v", err)
+	}
+}
