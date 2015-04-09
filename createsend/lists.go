@@ -225,6 +225,10 @@ type ListSegment struct {
 	Title     string `json:"Title"`
 }
 
+// ListSegments list the segments for a given list.
+//
+// See https://www.campaignmonitor.com/api/lists/#list_segments for
+// more information.
 func (c *APIClient) ListSegments(listID string) ([]ListSegment, error) {
 	u := fmt.Sprintf("lists/%s/segments.json", listID)
 
