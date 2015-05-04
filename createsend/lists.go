@@ -3,6 +3,8 @@ package createsend
 import (
 	"errors"
 	"fmt"
+	"net/url"
+	"strconv"
 	"time"
 )
 
@@ -38,28 +40,57 @@ type ListSubscribersOptions struct {
 	OrderDirection string
 }
 
+type ListSubscribersResponse struct {
+	Results              []*Subscriber
+	ResultsOrderedBy     string
+	OrderDirection       string
+	PageNumber           int
+	PageSize             int
+	RecordsOnThisPage    int
+	TotalNumberOfRecords int
+	NumberOfPages        int
+}
+
 // ListSubscribers lists all of the subscribers (in a given group, such as
 // ActiveSubscribers, UnconfirmedSubscribers, etc.).
 //
 // See http://www.campaignmonitor.com/api/lists/#active_subscribers for more
 // information.
-func (c *APIClient) ListSubscribers(listID string, group SubscriberGroup, opt *ListSubscribersOptions) ([]*Subscriber, error) {
-	if opt != nil {
-		panic("opt is not yet implemented")
-	}
-
+func (c *APIClient) ListSubscribers(listID string, group SubscriberGroup, opt *ListSubscribersOptions) (*ListSubscribersResponse, error) {
 	u := fmt.Sprintf("lists/%s/%s.json", listID, group)
+
+	if opt != nil {
+		v := url.Values{}
+		if !opt.Date.IsZero() {
+			v.Set("date", opt.Date.Format("2006-01-02"))
+		}
+		if opt.Page > 0 {
+			v.Set("page", strconv.Itoa(opt.Page))
+		}
+		if opt.PageSize > 0 {
+			v.Set("pagesize", strconv.Itoa(opt.PageSize))
+		}
+		if opt.OrderField != "" {
+			v.Set("orderfield", opt.OrderField)
+		}
+		if opt.OrderDirection != "" {
+			v.Set("orderdirection", opt.OrderDirection)
+		}
+
+		q := v.Encode()
+		if q != "" {
+			u = fmt.Sprintf("%s?%s", u, q)
+		}
+	}
 
 	req, err := c.NewRequest("GET", u, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	var results struct {
-		Results []*Subscriber
-	}
+	var results ListSubscribersResponse
 	err = c.Do(req, &results)
-	return results.Results, err
+	return &results, err
 }
 
 // ListDelete deletes a given list

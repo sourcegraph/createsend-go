@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func TestListSubscribers(t *testing.T) {
@@ -13,7 +14,14 @@ func TestListSubscribers(t *testing.T) {
 
 	mux.HandleFunc("/lists/12CD/active.json", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "GET")
-		fmt.Fprint(w, `{"Results": [{"EmailAddress": "alice@example.com", "Name": "alice"}]}`)
+		fmt.Fprint(w, `{"Results": [{"EmailAddress": "alice@example.com", "Name": "alice"}],
+		"ResultsOrderedBy": "email",
+	    "OrderDirection": "asc",
+	    "PageNumber": 1,
+	    "PageSize": 1000,
+	    "RecordsOnThisPage": 1,
+	    "TotalNumberOfRecords": 1,
+	    "NumberOfPages": 1}]}`)
 	})
 
 	subs, err := client.ListSubscribers("12CD", ActiveSubscribers, nil)
@@ -21,7 +29,139 @@ func TestListSubscribers(t *testing.T) {
 		t.Errorf("ListSubscribers returned error: %v", err)
 	}
 
-	want := []*Subscriber{{EmailAddress: "alice@example.com", Name: "alice"}}
+	want := &ListSubscribersResponse{Results: []*Subscriber{{EmailAddress: "alice@example.com", Name: "alice"}}, ResultsOrderedBy: "email", OrderDirection: "asc", PageNumber: 1, PageSize: 1000, RecordsOnThisPage: 1, TotalNumberOfRecords: 1, NumberOfPages: 1}
+	if !reflect.DeepEqual(subs, want) {
+		t.Errorf("ListSubscribers returned %+v, want %+v", subs, want)
+	}
+}
+
+func TestListSubscribersEmptyOptions(t *testing.T) {
+	setup()
+	defer teardown()
+
+	mux.HandleFunc("/lists/12CD/active.json", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "GET")
+		fmt.Fprint(w, `{"Results": [{"EmailAddress": "alice@example.com", "Name": "alice"}],
+		"ResultsOrderedBy": "email",
+	    "OrderDirection": "asc",
+	    "PageNumber": 1,
+	    "PageSize": 1000,
+	    "RecordsOnThisPage": 1,
+	    "TotalNumberOfRecords": 1,
+	    "NumberOfPages": 1}]}`)
+	})
+
+	subs, err := client.ListSubscribers("12CD", ActiveSubscribers, &ListSubscribersOptions{})
+	if err != nil {
+		t.Errorf("ListSubscribers returned error: %v", err)
+	}
+
+	want := &ListSubscribersResponse{Results: []*Subscriber{{EmailAddress: "alice@example.com", Name: "alice"}}, ResultsOrderedBy: "email", OrderDirection: "asc", PageNumber: 1, PageSize: 1000, RecordsOnThisPage: 1, TotalNumberOfRecords: 1, NumberOfPages: 1}
+	if !reflect.DeepEqual(subs, want) {
+		t.Errorf("ListSubscribers returned %+v, want %+v", subs, want)
+	}
+}
+
+func TestListSubscribersOptionsDate(t *testing.T) {
+	setup()
+	defer teardown()
+
+	mux.HandleFunc("/lists/12CD/active.json", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "GET")
+		if r.FormValue("date") != "2001-02-03" {
+			t.Errorf("Expected date to equsl 2001-02-03 but was %s", r.FormValue("date"))
+		}
+		if r.FormValue("page") != "" || r.FormValue("pagesize") != "" || r.FormValue("orderfield") != "" || r.FormValue("orderdirection") != "" {
+			t.Errorf("Unexpected extra parameters")
+		}
+		fmt.Fprint(w, `{"Results": [{"EmailAddress": "alice@example.com", "Name": "alice"}],
+		"ResultsOrderedBy": "email",
+	    "OrderDirection": "asc",
+	    "PageNumber": 1,
+	    "PageSize": 1000,
+	    "RecordsOnThisPage": 1,
+	    "TotalNumberOfRecords": 1,
+	    "NumberOfPages": 1}]}`)
+	})
+
+	subs, err := client.ListSubscribers("12CD", ActiveSubscribers, &ListSubscribersOptions{Date: time.Date(2001, time.February, 3, 0, 0, 0, 0, time.UTC)})
+	if err != nil {
+		t.Errorf("ListSubscribers returned error: %v", err)
+	}
+
+	want := &ListSubscribersResponse{Results: []*Subscriber{{EmailAddress: "alice@example.com", Name: "alice"}}, ResultsOrderedBy: "email", OrderDirection: "asc", PageNumber: 1, PageSize: 1000, RecordsOnThisPage: 1, TotalNumberOfRecords: 1, NumberOfPages: 1}
+	if !reflect.DeepEqual(subs, want) {
+		t.Errorf("ListSubscribers returned %+v, want %+v", subs, want)
+	}
+}
+
+func TestListSubscribersOptionsPage(t *testing.T) {
+	setup()
+	defer teardown()
+
+	mux.HandleFunc("/lists/12CD/active.json", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "GET")
+		if r.FormValue("page") != "3" {
+			t.Errorf("Expected page to equal 3 but was %s", r.FormValue("page"))
+		}
+		if r.FormValue("pagesize") != "123" {
+			t.Errorf("Expected pagesize to equal 123 but was %s", r.FormValue("pagesize"))
+		}
+		if r.FormValue("date") != "" || r.FormValue("orderfield") != "" || r.FormValue("orderdirection") != "" {
+			t.Errorf("Unexpected extra parameters")
+		}
+		fmt.Fprint(w, `{"Results": [{"EmailAddress": "alice@example.com", "Name": "alice"}],
+		"ResultsOrderedBy": "email",
+	    "OrderDirection": "asc",
+	    "PageNumber": 3,
+	    "PageSize": 1000,
+	    "RecordsOnThisPage": 1,
+	    "TotalNumberOfRecords": 1,
+	    "NumberOfPages": 1}]}`)
+	})
+
+	subs, err := client.ListSubscribers("12CD", ActiveSubscribers, &ListSubscribersOptions{Page: 3, PageSize: 123})
+	if err != nil {
+		t.Errorf("ListSubscribers returned error: %v", err)
+	}
+
+	want := &ListSubscribersResponse{Results: []*Subscriber{{EmailAddress: "alice@example.com", Name: "alice"}}, ResultsOrderedBy: "email", OrderDirection: "asc", PageNumber: 3, PageSize: 1000, RecordsOnThisPage: 1, TotalNumberOfRecords: 1, NumberOfPages: 1}
+	if !reflect.DeepEqual(subs, want) {
+		t.Errorf("ListSubscribers returned %+v, want %+v", subs, want)
+	}
+}
+
+func TestListSubscribersOptionsOrder(t *testing.T) {
+	setup()
+	defer teardown()
+
+	mux.HandleFunc("/lists/12CD/active.json", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "GET")
+		if r.FormValue("orderfield") != "of" {
+			t.Errorf("Expected orderfield to equal of but was %s", r.FormValue("orderfield"))
+		}
+		if r.FormValue("orderdirection") != "desc" {
+			t.Errorf("Expected orderdirection to equal desc but was %s", r.FormValue("orderdirection"))
+		}
+		if r.FormValue("date") != "" || r.FormValue("page") != "" || r.FormValue("pagesize") != "" {
+			t.Errorf("Unexpected extra parameters")
+		}
+		fmt.Fprint(w, `{"Results": [{"EmailAddress": "alice@example.com", "Name": "alice"}],
+		"ResultsOrderedBy": "of",
+	    "OrderDirection": "desc",
+	    "PageNumber": 1,
+	    "PageSize": 1000,
+	    "RecordsOnThisPage": 1,
+	    "TotalNumberOfRecords": 1,
+	    "NumberOfPages": 1}]}`)
+	})
+
+	subs, err := client.ListSubscribers("12CD", ActiveSubscribers, &ListSubscribersOptions{OrderField: "of", OrderDirection: "desc"})
+	if err != nil {
+		t.Errorf("ListSubscribers returned error: %v", err)
+	}
+
+	want := &ListSubscribersResponse{Results: []*Subscriber{{EmailAddress: "alice@example.com", Name: "alice"}}, ResultsOrderedBy: "of", OrderDirection: "desc", PageNumber: 1, PageSize: 1000, RecordsOnThisPage: 1, TotalNumberOfRecords: 1, NumberOfPages: 1}
 	if !reflect.DeepEqual(subs, want) {
 		t.Errorf("ListSubscribers returned %+v, want %+v", subs, want)
 	}
