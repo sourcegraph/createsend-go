@@ -90,3 +90,37 @@ func (c *APIClient) ListsForEmail(clientID string, email string) ([]*ListForEmai
 
 	return lists, err
 }
+
+type Campaign struct {
+	FromName          string `json:"FromName"`
+	FromEmail         string `json:"FromEmail"`
+	ReplyTo           string `json:"ReplyTo"`
+	WebVersionURL     string `json:"WebVersionURL"`
+	WebVersionTextURL string `json:"WebVersionTextURL"`
+	CampaignID        string `json:"CampaignID"`
+	Subject           string `json:"Subject"`
+	Name              string `json:"Name"`
+	SentDate          string `json:"SentDate"`
+	TotalRecipients   int64  `json:"TotalRecipients"`
+}
+
+// Campaigns return all the sent campaigns for a specific client
+//
+// See https://www.campaignmonitor.com/api/clients/#sent_campaigns for more
+// information.
+func (c *APIClient) Campaigns(clientID string) ([]*Campaign, error) {
+	u := fmt.Sprintf("clients/%s/campaigns.json", clientID)
+
+	req, err := c.NewRequest("GET", u, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var campaigns []*Campaign
+	err = c.Do(req, &campaigns)
+	if err != nil {
+		return nil, err
+	}
+
+	return campaigns, err
+}
