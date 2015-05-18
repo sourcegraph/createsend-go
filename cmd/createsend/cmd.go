@@ -145,11 +145,11 @@ func listSubscribers(args []string) {
 	if err != nil {
 		log.Fatalf("Error listing subcribers for list %q: %s\n", listID, err)
 	}
-	if len(subs) == 0 {
+	if len(subs.Results) == 0 {
 		fmt.Println("No subscribers found.")
 		return
 	}
-	for _, c := range subs {
+	for _, c := range subs.Results {
 		fmt.Printf("%-24s %s\n", c.EmailAddress, c.Name)
 	}
 }
