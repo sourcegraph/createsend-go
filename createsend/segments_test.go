@@ -103,3 +103,21 @@ func TestSegmentDetail(t *testing.T) {
 		t.Errorf("Expected SegmentID 12CD but got: %s", s.SegmentID)
 	}
 }
+
+func TestSegmentUpdate(t *testing.T) {
+	setup()
+	defer teardown()
+
+	mux.HandleFunc("/segments/12CD.json", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "PUT")
+
+		w.WriteHeader(http.StatusOK)
+	})
+
+	sgmt := SegmentCreate{Title: "test"}
+	err := client.SegmentUpdate("12CD", &sgmt)
+
+	if err != nil {
+		t.Errorf("SegmentUpdate returned an error")
+	}
+}
