@@ -4,7 +4,7 @@ import "fmt"
 
 type SegmentCreate struct {
 	Title      string            `json:"Title"`
-	RuleGroups []RuleGroupCreate `json:"RuleGroups"`
+	RuleGroups []RuleGroupCreate `json:"RuleGroups,omitempty"`
 }
 
 type RuleGroupCreate struct {
@@ -35,6 +35,23 @@ func (c *APIClient) SegmentCreate(listID string, sgmt *SegmentCreate) (string, e
 	}
 
 	return r, nil
+}
+
+// Update an existing segment
+//
+// See https://www.campaignmonitor.com/api/segments/#updating_a_segment for more
+// information.
+func (c *APIClient) SegmentUpdate(segmentID string, sgmt *SegmentCreate) error {
+	u := fmt.Sprintf("segments/%s.json", segmentID)
+
+	req, err := c.NewRequest("PUT", u, sgmt)
+	if err != nil {
+		return err
+	}
+
+	err = c.Do(req, nil)
+
+	return err
 }
 
 type SegmentDetail struct {
