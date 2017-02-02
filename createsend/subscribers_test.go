@@ -27,6 +27,26 @@ func TestAddSubscriber(t *testing.T) {
 	}
 }
 
+func TestUpdateSubscriber(t *testing.T) {
+	setup()
+	defer teardown()
+
+	mux.HandleFunc("/subscribers/12CD.json", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "PUT")
+		testQuerystring(t, r, "email=alice@example.com")
+		fmt.Fprint(w, "OK")
+	})
+
+	sub := NewSubscriber{
+		EmailAddress: "alice@example.net",
+		Name:         "Alice",
+	}
+	err := client.UpdateSubscriber("12CD", "alice@example.com", sub)
+	if err != nil {
+		t.Errorf("AddSubscriber returned error: %v", err)
+	}
+}
+
 func TestGetSubscriber(t *testing.T) {
 	setup()
 	defer teardown()
