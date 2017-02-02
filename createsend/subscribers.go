@@ -41,6 +41,21 @@ func (c *APIClient) AddSubscriber(listID string, sub NewSubscriber) error {
 	return c.Do(req, nil)
 }
 
+// UpdateSubscriber updates a subscriber.
+//
+// See http://www.campaignmonitor.com/api/subscribers/#updating_a_subscriber for
+// more information.
+func (c *APIClient) UpdateSubscriber(listID string, email string, sub NewSubscriber) error {
+	u := fmt.Sprintf("subscribers/%s.json?email=%s", listID, email)
+
+	req, err := c.NewRequest("PUT", u, sub)
+	if err != nil {
+		return err
+	}
+
+	return c.Do(req, nil)
+}
+
 // Subscriber represents a subscriber.
 //
 // See
