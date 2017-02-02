@@ -107,10 +107,8 @@ func TestNewRequest(t *testing.T) {
 func TestNewRequest_invalidJSON(t *testing.T) {
 	c := NewAPIClient(nil)
 
-	type T struct {
-		A map[int]interface{}
-	}
-	_, err := c.NewRequest("GET", "/", &T{})
+	invalidBody := func() {}
+	_, err := c.NewRequest("GET", "/", invalidBody)
 
 	if err == nil {
 		t.Error("Expected error to be returned.")
