@@ -11,7 +11,7 @@ Monitor](http://www.campaignmonitor.com). Official libraries are available at
 **Documentation:** <https://sourcegraph.com/github.com/sourcegraph/createsend-go>
 
 [![Build Status](https://travis-ci.org/sourcegraph/createsend-go.png?branch=master)](https://travis-ci.org/sourcegraph/createsend-go)
-
+[![Sourcegraph](https://sourcegraph.com/github.com/sourcegraph/createsend-go/-/badge.svg)](https://sourcegraph.com/github.com/sourcegraph/createsend-go?badge)
 
 Example usage
 -------------
